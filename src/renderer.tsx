@@ -29,9 +29,10 @@
 import React from 'react';
 import './index.css';
 import { createRoot } from 'react-dom/client';
+import Layout from './layout';
 
 
 const root = createRoot(document.body);
-root.render(<h2>Hello from React!</h2>);
+root.render(<Layout />);
 
 console.log('👋 This message is being logged by "renderer.ts", included via Vite');
