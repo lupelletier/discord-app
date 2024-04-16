@@ -26,13 +26,27 @@
  * ```
  */
 
-import React from 'react';
+import React, { useContext } from 'react';
 import './index.css';
 import { createRoot } from 'react-dom/client';
 import Layout from './layout';
+import { Socket, io } from 'socket.io-client';
+import SocketProvider from './providers/SocketProvider';
 
 
-const root = createRoot(document.body);
-root.render(<Layout />);
+const root = createRoot(document.getElementById('root'));
+root.render(
+    <SocketProvider>
+        <Layout />
+    </SocketProvider>
+);
+// const socket = io('ws://localhost:3000');
+// socket.on('connect', () => {
+//     console.log('Connected to server');
+//     socket.send('message', 'Hello from renderer');
+//     socket.on('message', (message) => {
+//         console.log('New message: ', message);
+//     });
+// });
 
 console.log('👋 This message is being logged by "renderer.ts", included via Vite');

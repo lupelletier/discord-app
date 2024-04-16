@@ -44,8 +44,11 @@
   "dependencies": {
     "@vitejs/plugin-react": "^4.2.1",
     "electron-squirrel-startup": "^1.0.0",
+    "express": "^4.19.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
     "vite-plugin-react": "^4.0.1"
   }
 }
