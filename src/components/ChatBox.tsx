@@ -13,7 +13,7 @@ export default function ChatBox() {
     };
     console.log(message)
     return (
-        <div className='fixed bottom-0 w-3/4 bg-gray-900'>
+        <div className='fixed bottom-0 w-5/6 bg-gray-900'>
         <div className="flex justify-evenly items-center p-4 border-t border-gray-600">
             <input
                 onChange={(e) => setMessage(e.target.value)}

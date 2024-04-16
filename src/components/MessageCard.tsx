@@ -1,8 +1,8 @@
 import React from 'react';
-export default function MessageCard({message}: {message: string}) {
 
+export default function MessageCard({message}: {message: string}) {
     return (
-        <div className='p-4'>
+        <div className='bg-white shadow-md rounded-md p-4 mb-4 w-fit'>
             {message}
         </div>
     );

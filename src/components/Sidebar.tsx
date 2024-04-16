@@ -1,7 +1,7 @@
 import React from 'react';
 export default function Sidebar() {
     return (
-      <div className="fixed w-1/4 h-full top-0 left-0 bg-gray-700">
+      <div className="fixed w-1/6 h-full top-0 left-0 bg-gray-700">
       <div className="p-4 text-white">
         <div className="text-center mb-8">
           <img src="logo.png" alt="Logo" className="w-16 h-16 mx-auto" />
