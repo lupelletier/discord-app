@@ -9,9 +9,9 @@ function main() {
 
     io.on("connection", (socket: Socket) => {
         console.log("New connection", socket.id);
-        
+
         // Sending the socket id to the client
-        socket.emit("message", socket.id);
+        socket.emit("message", "welcome to chat !", socket.id);
 
         // Listening for messages from the client
         socket.on("message", (message: string) => {

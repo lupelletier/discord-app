@@ -16,6 +16,10 @@ export default function ChatBox() {
         <div className='fixed bottom-0 w-5/6 bg-gray-900'>
         <div className="flex justify-evenly items-center p-4 border-t border-gray-600">
             <input
+                onKeyDown={(e) => {
+                    if (e.key === "Enter")
+                       sendMessage();
+                    }}
                 onChange={(e) => setMessage(e.target.value)}
                 value={message}
                 type="text"
