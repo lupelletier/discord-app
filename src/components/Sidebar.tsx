@@ -9,13 +9,13 @@ export default function Sidebar() {
         <nav>
           <ul className="space-y-4">
             <li>
-              <a href="#" className="block px-4 py-2 rounded-md hover:bg-gray-700">Chat 1</a>
+              <a href="#" className="block px-4 py-2 rounded-md bg-inherit bg-gray-700 hover:bg-gray-600">Chat 1</a>
             </li>
             <li>
-              <a href="#" className="block px-4 py-2 rounded-md hover:bg-gray-700">Chat 2</a>
+              <a href="#" className="block px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600">Chat 2</a>
             </li>
             <li>
-              <a href="#" className="block px-4 py-2 rounded-md hover:bg-gray-700">Chat 3</a>
+              <a href="#" className="block px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600">Chat 3</a>
             </li>
           </ul>
         </nav>
