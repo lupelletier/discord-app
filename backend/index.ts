@@ -17,12 +17,12 @@ function main() {
         socket.emit("message", "Welcome to chat!", socket.id);
 
         // Listening for messages from the client
-        socket.on("message", async (message: string) => {
-            console.log("New message from client: ", message);
+        socket.on("message", async (message: string, conversationId:string) => {
+            console.log("New message from client: ", message, conversationId);
 
             // Assuming a user with ID 1 exists
             const userId = 1;
-            const query = 'INSERT INTO Messages (content, userId) VALUES (?, ?)';
+            const query = 'INSERT INTO Messages (content, userId, conversationId) VALUES (?, ?, 1)';
 
             try {
                 const [results] = await connection.query<ResultSetHeader>(query, [message, userId]);

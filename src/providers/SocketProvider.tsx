@@ -25,7 +25,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
                 return () => socket.off('message', callback); // Return a cleanup function
             },
             send(message) {
-                socket.send(message);
+                socket.send(message, 1);
             },
         }),
         [socket]
