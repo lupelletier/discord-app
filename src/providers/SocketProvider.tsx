@@ -1,46 +1,76 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { ReactNode, createContext, useContext, useMemo, useEffect, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
 
-export const socketContext = createContext<Socket|null>(null);
+export type AppSocket = {
+    onMessage(callback: (message: string) => void): () => void;
+    send(message: unknown): void;
+}
+
+// create context for socket, set socket
+export const socketContext = createContext<AppSocket | null>(null);
+
 // create context for messages, set messages
-export const messagesContext = createContext<{messages: string[]; setImages(messages: string[]): void;} | null >(null);
+export const messagesContext = createContext<{ messages: string[]; setMessages(messages: string[]): void; } | null>(null);
 
-
-const SocketProvider = ({children}: {children: React.ReactNode}) => {
+// create socket provider
+export function SocketProvider({ children }: { children: ReactNode }) {
     const socket = useMemo(() => io('ws://localhost:3000'), []);
-    
-    const [messages, setMessages] = React.useState<string[]>([]);
-    // useMemo to pass messages 
-    useEffect(()=>{
+
+    const [messages, setMessages] = useState<string[]>([]);
+
+    const appSocket = useMemo<AppSocket>(
+        () => ({
+            onMessage(callback) {
+                socket.on('message', callback);
+                return () => socket.off('message', callback); // Return a cleanup function
+            },
+            send(message) {
+                socket.send(message);
+            },
+        }),
+        [socket]
+    );
+
+    useEffect(() => {
+        const handleMessage = (message: string) => {
+            console.log('New message: ', message);
+            setMessages((prevMessages) => [...prevMessages, message]);
+        };
+
+        const unsubscribe = appSocket.onMessage(handleMessage);
+
         socket.on('connect', () => {
+            console.log('Connected to server');
             socket.emit('message', 'Hello from renderer');
-            socket.on('message', (message: string) => {
-                console.log('New message: ', message);
-                handleMessages(message);
-            });
         });
+
         return () => {
+            unsubscribe();
             socket.disconnect();
         };
-    
-    }, [socket]); // Include socket in the dependency array to avoid potential issues
-    
-    useEffect(() => {
-        console.log(messages);
-    }, [messages]); // Log messages whenever it changes
-    
-    const handleMessages = (message: string) => {
-        console.log('New message handled: ', message);
-        setMessages((prevMessages) => [...prevMessages, message]);
-        console.log(messages);
-    }
+    }, [appSocket, socket]);
+
     return (
-        <socketContext.Provider value={socket}>
-            <messagesContext.Provider value={{messages, setImages: setMessages}}>
+        <socketContext.Provider value={appSocket}>
+            <messagesContext.Provider value={{ messages, setMessages }}>
                 {children}
             </messagesContext.Provider>
         </socketContext.Provider>
     );
-};
+}
 
-export default SocketProvider;
+export function useSocket() {
+    const socket = useContext(socketContext);
+    if (!socket) {
+        throw new Error('useSocket must be used within a SocketProvider');
+    }
+    return socket;
+}
+
+export function useMessages() {
+    const messages = useContext(messagesContext);
+    if (!messages) {
+        throw new Error('useMessages must be used within a SocketProvider');
+    }
+    return messages;
+}
