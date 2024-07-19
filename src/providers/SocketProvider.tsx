@@ -7,7 +7,7 @@ export type AppSocket = {
 };
 
 export const socketContext = createContext<AppSocket | null>(null);
-export const messagesContext = createContext<{ messages: Record<number, string[]>; setMessages: (messages: (prevMessages: any) => any) => void; } | null>(null);
+export const messagesContext = createContext<{ messages: string[]; setMessages: (messages: string[]) => void } | null>(null);
 export const conversationContext = createContext<{ conversationRoom: Conversation | null; setConversationRoom: (conversationRoom: Conversation) => void; } | null>(null);
 export const conversationsContext = createContext<{ conversations: Conversation[]; setConversations: (conversations: Conversation[]) => void; } | null>(null);
 
@@ -20,12 +20,22 @@ class Conversation {
     }
 }
 
+export class Message {
+    content: string;
+    userId: number;
+    conversationId: number;
+    constructor(content: string, userId: number, conversationId: number) {
+        this.content = content;
+        this.userId = userId;
+        this.conversationId = conversationId;
+    }
+}
+
 export function SocketProvider({ children }: { children: ReactNode }) {
     const socket = useMemo(() => io('ws://localhost:3000'), []);
-    const [messages, setMessages] = useState<Record<number, string[]>>({});
+    const [messages, setMessages] = useState< string[]>([]);
     const [conversationRoom, setConversationRoom] = useState<Conversation | null>(null);
     const [conversations, setConversations] = useState<Conversation[]>([]);
-    const [isConversationsFetched, setIsConversationsFetched] = useState(false);
 
     const appSocket = useMemo<AppSocket>(
         () => ({
@@ -40,8 +50,6 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         [socket, conversationRoom]
     );
 
-
-
     useEffect(() => {
         const fetchConversations = async () => {
             try {
@@ -52,7 +60,6 @@ export function SocketProvider({ children }: { children: ReactNode }) {
                 const data = await response.json();
                 setConversations(data);
                 setConversationRoom(data[0] || null);
-                setIsConversationsFetched(true);
             } catch (error) {
                 console.error('Error fetching conversations:', error);
             }
@@ -61,12 +68,26 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         fetchConversations();
     }, []);
 
-
     useEffect(() => {
         if (conversationRoom) {
             socket.emit('joinRoom', conversationRoom.id);
+            getRoomMessages(conversationRoom.id);
         }
-    }, [conversationRoom]);
+    }, [conversationRoom, messages]);
+
+
+    const getRoomMessages = async (conversationId: number) => {
+        try {
+            const response = await fetch(`http://localhost:3001/messages/${conversationId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch messages');
+            }
+            const data = await response.json();
+            setMessages(data.map((message: { content: string }) => message.content));
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    };
 
     return (
         <socketContext.Provider value={appSocket}>

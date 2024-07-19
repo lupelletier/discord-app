@@ -13,10 +13,6 @@ const ChatBox: React.FC = () => {
             console.log('Sending message:', newMessage);
             console.log('To room:', conversationRoom.id);
             socket.send(newMessage, conversationRoom.id);
-            setMessages(prevMessages => ({
-                ...prevMessages,
-                [conversationRoom.id]: [...(prevMessages[conversationRoom.id] || []), newMessage]
-            }));
             setInput('');
         } else {
             console.error('Message or conversationRoom ID is invalid');

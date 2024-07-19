@@ -49,15 +49,7 @@ io.on("connection", (socket: Socket) => {
 
     socket.on('joinRoom', async (conversationId: number) => {
         socket.join(`room${conversationId}`);
-        await fetch(`http://localhost:3001/messages/${conversationId}`)
-            .then((response) => response.json())
-            .then((data) => {
-                console.log('Fetched messages:', data);
-                socket.emit('messages', data);
-            })
-            .catch((err) => {
-                console.error('Error fetching messages:', err);
-            });
+
         console.log(`Socket ${socket.id} joined room ${conversationId}`);
     });
 

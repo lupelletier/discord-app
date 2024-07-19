@@ -1,4 +1,5 @@
 import React from 'react';
+import {Message} from "../providers/SocketProvider";
 
 export default function MessageCard({message}: {message: string}) {
     return (
