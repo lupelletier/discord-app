@@ -33,7 +33,7 @@ export class Message {
 
 export function SocketProvider({ children }: { children: ReactNode }) {
     const socket = useMemo(() => io('ws://localhost:3000'), []);
-    const [messages, setMessages] = useState< string[]>([]);
+    const [messages, setMessages] = useState<string[]>([]);
     const [conversationRoom, setConversationRoom] = useState<Conversation | null>(null);
     const [conversations, setConversations] = useState<Conversation[]>([]);
 
@@ -41,13 +41,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         () => ({
             onMessage(callback) {
                 socket.on('message', callback);
+
                 return () => socket.off('message', callback);
             },
             send(message, conversationRoomId) {
                 socket.emit('message', { text: message, conversationRoomId });
+                // Manually update the messages state
+                setMessages(prevMessages => [...prevMessages, message]);
             },
         }),
-        [socket, conversationRoom]
+        [socket]
     );
 
     useEffect(() => {
@@ -73,8 +76,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             socket.emit('joinRoom', conversationRoom.id);
             getRoomMessages(conversationRoom.id);
         }
-    }, [conversationRoom, messages]);
-
+    }, [conversationRoom]);
 
     const getRoomMessages = async (conversationId: number) => {
         try {
@@ -88,6 +90,17 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             console.error('Error fetching messages:', error);
         }
     };
+
+    useEffect(() => {
+        const handleMessage = (message: { conversationRoomId: number; text: string }) => {
+            if (message.conversationRoomId === conversationRoom?.id) {
+                setMessages(prevMessages => [...prevMessages, message.text]);
+            }
+        };
+
+        const unsubscribe = appSocket.onMessage(handleMessage);
+        return () => unsubscribe();
+    }, [conversationRoom, appSocket]);
 
     return (
         <socketContext.Provider value={appSocket}>
