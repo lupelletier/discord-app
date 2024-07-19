@@ -9,18 +9,27 @@ async function createTables() {
         );
     `;
 
+    const createConversationsTable = `
+        CREATE TABLE IF NOT EXISTS Conversations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL UNIQUE
+        );
+    `;
+
     const createMessagesTable = `
         CREATE TABLE IF NOT EXISTS Messages (
             id INT AUTO_INCREMENT PRIMARY KEY,
             content TEXT NOT NULL,
             userId INT,
-            channel VARCHAR(255) NOT NULL,
-            FOREIGN KEY (userId) REFERENCES Users(id)
+            conversationId INT,
+            FOREIGN KEY (userId) REFERENCES Users(id),
+            FOREIGN KEY (conversationId) REFERENCES Conversations(id)
         );
-    `
+    `;
 
     try {
         await connection.query(createUsersTable);
+        await connection.query(createConversationsTable);
         await connection.query(createMessagesTable);
         console.log('Tables created or verified successfully.');
     } catch (err) {

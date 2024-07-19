@@ -1,17 +1,27 @@
-import React from 'react';
-import { useSocket, useMessages } from '../providers/SocketProvider';
+import React, { useEffect } from 'react';
+import { useSocket, useMessages, useConversation } from '../providers/SocketProvider';
 
-const ChatComponent: React.FC = () => {
+const ChatBox: React.FC = () => {
     const socket = useSocket();
-    const { messages, setMessages } = useMessages();
+    const { setMessages } = useMessages();
+    const { conversationRoom } = useConversation();
     const [input, setInput] = React.useState('');
 
     const sendMessage = () => {
-        if (input.trim() !== '') {
-            socket.send(input);
+        if (input.trim() !== '' && conversationRoom) {
+            const newMessage = input.trim();
+            socket.send(newMessage, conversationRoom.id);
+            setMessages((prevMessages: any) => ({
+                ...prevMessages,
+                [conversationRoom.id]: [...(prevMessages[conversationRoom.id] || []), `You: ${newMessage}`]
+            }));
             setInput('');
         }
     };
+
+    useEffect(() => {
+        console.log(input);
+    }, [input]);
 
     return (
         <div className="fixed bottom-0 w-5/6 bg-gray-900">
@@ -39,4 +49,4 @@ const ChatComponent: React.FC = () => {
     );
 };
 
-export default ChatComponent;
+export default ChatBox;

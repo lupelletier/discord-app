@@ -11,6 +11,6 @@ contextBridge.exposeInMainWorld("MessageAPI", {
         return () => ipcRenderer.off("message", wrappedCallback);
     }, 
     send (message: string) {
-        ipcRenderer.send( message);
+        ipcRenderer.send("socket-message",message);
     }
 })
