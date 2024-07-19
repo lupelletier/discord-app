@@ -1,4 +1,4 @@
-import React, { ReactNode, createContext, useContext, useMemo, useEffect, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import io from 'socket.io-client';
 
 export type AppSocket = {
@@ -37,13 +37,15 @@ export function SocketProvider({ children }: { children: ReactNode }) {
                 socket.emit('message', { text: message, conversationRoomId });
             },
         }),
-        [socket]
+        [socket, conversationRoom]
     );
+
+
 
     useEffect(() => {
         const fetchConversations = async () => {
             try {
-                const response = await fetch('http://localhost:3003/conversations');
+                const response = await fetch('http://localhost:3001/conversations');
                 if (!response.ok) {
                     throw new Error('Failed to fetch conversations');
                 }
@@ -52,46 +54,19 @@ export function SocketProvider({ children }: { children: ReactNode }) {
                 setConversationRoom(data[0] || null);
                 setIsConversationsFetched(true);
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error fetching conversations:', error);
             }
         };
 
         fetchConversations();
     }, []);
 
-    useEffect(() => {
-        if (!isConversationsFetched) return;
-
-        const handleMessage = (message: { conversationRoomId: number; text: string }) => {
-            setMessages((prevMessages) => {
-                const { conversationRoomId, text } = message;
-                const roomMessages = prevMessages[conversationRoomId] || [];
-                return {
-                    ...prevMessages,
-                    [conversationRoomId]: [...roomMessages, text],
-                };
-            });
-        };
-
-        const unsubscribe = appSocket.onMessage(handleMessage);
-
-        socket.on('connect', () => {
-            if (conversationRoom) {
-                socket.emit('joinRoom', conversationRoom.id);
-            }
-        });
-
-        return () => {
-            unsubscribe();
-            socket.disconnect();
-        };
-    }, [appSocket, socket, conversationRoom, isConversationsFetched]);
 
     useEffect(() => {
         if (conversationRoom) {
             socket.emit('joinRoom', conversationRoom.id);
         }
-    }, [conversationRoom, socket]);
+    }, [conversationRoom]);
 
     return (
         <socketContext.Provider value={appSocket}>

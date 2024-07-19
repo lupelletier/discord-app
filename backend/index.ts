@@ -5,19 +5,35 @@ import express from 'express';
 import cors from 'cors';
 
 const app = express();
-const PORT = 3003;
+const PORT = 3001;
 
 app.use(cors());
-app.use(express.json());
 
 app.get('/conversations', async (req, res) => {
     const query = 'SELECT * FROM Conversations';
     try {
-        const[ rows] = await connection.query(query);
+        const [rows] = await connection.query(query);
         console.log('Fetched conversations:', rows);
         res.json(rows);
     } catch (err) {
         console.error('Error fetching conversations:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.get('/', function (req, res) {
+    res.send('Hello World!');
+});
+
+app.get('/messages/:conversationId', async (req, res) => {
+    const { conversationId } = req.params;
+    const query = 'SELECT * FROM Messages WHERE conversationId = ?';
+    try {
+        const [rows] = await connection.query(query, [conversationId]);
+        console.log(`Fetched messages for conversation ${conversationId}:`, rows);
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching messages:', err);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -31,25 +47,34 @@ const io = new Server({
 io.on("connection", (socket: Socket) => {
     console.log("New connection", socket.id);
 
-    socket.on('joinRoom', (conversationId: number) => {
+    socket.on('joinRoom', async (conversationId: number) => {
         socket.join(`room${conversationId}`);
+        await fetch(`http://localhost:3001/messages/${conversationId}`)
+            .then((response) => response.json())
+            .then((data) => {
+                console.log('Fetched messages:', data);
+                socket.emit('messages', data);
+            })
+            .catch((err) => {
+                console.error('Error fetching messages:', err);
+            });
         console.log(`Socket ${socket.id} joined room ${conversationId}`);
     });
 
-    socket.on("message", async ({ message, conversationId }: { message: string, conversationId: number }) => {
-        console.log(`New message from client: ${message} in conversation ${conversationId}`);
-
-        const userId = 1; // Assuming a user with ID 1 exists
-        const query = 'INSERT INTO Messages (content, userId, conversationId) VALUES (?, ?, ?)';
-
-        try {
-            const [results] = await connection.query<ResultSetHeader>(query, [message, userId, conversationId]);
-            console.log('Message inserted with ID:', results.insertId);
-
-            io.to(`room${conversationId}`).emit("message", { message, userId, conversationId, id: results.insertId });
-        } catch (err) {
-            console.error('Error inserting message into database:', err);
+    socket.on('message', ({ text, conversationRoomId }) => {
+        if (typeof text !== 'string' || !text.trim() || typeof conversationRoomId !== 'number') {
+            console.error('Invalid message or conversationRoomId received', { text, conversationRoomId });
+            return;
         }
+        const userId = 1; // Hardcoded user ID for now
+        // Perform database insert
+        connection.query('INSERT INTO Messages (content, userId, conversationId) VALUES (?, ?, ?)', [text, userId, conversationRoomId])
+            .then(() => {
+                console.log('Message inserted successfully');
+            })
+            .catch(err => {
+                console.error('Error inserting message into database:', err);
+            });
     });
 });
 

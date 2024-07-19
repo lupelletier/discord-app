@@ -8,20 +8,21 @@ const ChatBox: React.FC = () => {
     const [input, setInput] = React.useState('');
 
     const sendMessage = () => {
-        if (input.trim() !== '' && conversationRoom) {
+        if (input.trim() !== '' && conversationRoom && conversationRoom.id) {
             const newMessage = input.trim();
+            console.log('Sending message:', newMessage);
+            console.log('To room:', conversationRoom.id);
             socket.send(newMessage, conversationRoom.id);
-            setMessages((prevMessages: any) => ({
+            setMessages(prevMessages => ({
                 ...prevMessages,
-                [conversationRoom.id]: [...(prevMessages[conversationRoom.id] || []), `You: ${newMessage}`]
+                [conversationRoom.id]: [...(prevMessages[conversationRoom.id] || []), newMessage]
             }));
             setInput('');
+        } else {
+            console.error('Message or conversationRoom ID is invalid');
         }
     };
 
-    useEffect(() => {
-        console.log(input);
-    }, [input]);
 
     return (
         <div className="fixed bottom-0 w-5/6 bg-gray-900">
