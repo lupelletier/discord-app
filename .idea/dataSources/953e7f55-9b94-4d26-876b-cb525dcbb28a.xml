@@ -997,7 +997,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <Charset>utf8mb4</Charset>
     </collation>
     <schema id="288" parent="1" name="discord_app">
-      <LastIntrospectionLocalTimestamp>2024-07-19.13:56:38</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2024-07-22.09:35:06</LastIntrospectionLocalTimestamp>
       <CollationName>utf8mb4_0900_ai_ci</CollationName>
     </schema>
     <schema id="289" parent="1" name="information_schema">
@@ -1044,7 +1044,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <CollationName>utf8mb4_0900_ai_ci</CollationName>
     </table>
     <column id="300" parent="297" name="id">
-      <AutoIncrement>1</AutoIncrement>
+      <AutoIncrement>3</AutoIncrement>
       <DasType>int|0s</DasType>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -1073,7 +1073,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>name</UnderlyingIndexName>
     </key>
     <column id="306" parent="298" name="id">
-      <AutoIncrement>2</AutoIncrement>
+      <AutoIncrement>159</AutoIncrement>
       <DasType>int|0s</DasType>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -1120,7 +1120,7 @@ sys|schema||mysql.sys|localhost|TRIGGER|G</Grants>
       <UnderlyingIndexName>PRIMARY</UnderlyingIndexName>
     </key>
     <column id="316" parent="299" name="id">
-      <AutoIncrement>1</AutoIncrement>
+      <AutoIncrement>2</AutoIncrement>
       <DasType>int|0s</DasType>
       <NotNull>1</NotNull>
       <Position>1</Position>

@@ -99,6 +99,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         };
 
         const unsubscribe = appSocket.onMessage(handleMessage);
+
         return () => unsubscribe();
     }, [conversationRoom, appSocket]);
 

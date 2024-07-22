@@ -1,6 +1,5 @@
 import { Server, Socket } from "socket.io";
 import connection from "./db";
-import { ResultSetHeader } from "mysql2";
 import express from 'express';
 import cors from 'cors';
 
@@ -46,16 +45,29 @@ const io = new Server({
 
 io.on("connection", (socket: Socket) => {
     console.log("New connection", socket.id);
+    // get socket user id from window
+
+
+
 
     socket.on('joinRoom', async (conversationId: number) => {
         socket.join(`room${conversationId}`);
-
+        await fetch(`http://localhost:3001/messages/${conversationId}`)
+            .then((response) => response.json())
+            .then((data) => {
+                console.log('Fetched messages:', data);
+                socket.emit('messages', data);
+            })
+            .catch((err) => {
+                console.error('Error fetching messages:', err);
+            });
         console.log(`Socket ${socket.id} joined room ${conversationId}`);
     });
 
-    socket.on('message', ({ text, conversationRoomId }) => {
+
+    socket.on('message', ({text, conversationRoomId}) => {
         if (typeof text !== 'string' || !text.trim() || typeof conversationRoomId !== 'number') {
-            console.error('Invalid message or conversationRoomId received', { text, conversationRoomId });
+            console.error('Invalid message or conversationRoomId received', {text, conversationRoomId});
             return;
         }
         const userId = 1; // Hardcoded user ID for now

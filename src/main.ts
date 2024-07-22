@@ -1,101 +1,95 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
-  app.quit();
+    app.quit();
 }
 
-// const createWindow = () => {
-//   // Create the browser window.
-//   const mainWindow = new BrowserWindow({
-//     width: 800,
-//     height: 600,
-//     webPreferences: {
-//       preload: path.join(__dirname, 'preload.js'),
-//     },
-//   });
+// Create the socket connection
+const socket: Socket = io('ws://localhost:3000');
 
-//   // and load the index.html of the app.
-//   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-//     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-//   } else {
-//     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-//   }
+let mainWindow1: BrowserWindow | null = null;
+let mainWindow2: BrowserWindow | null = null;
 
-//   // Open the DevTools.
-//   mainWindow.webContents.openDevTools();
-// };
+// Create and configure windows
+const createWindow = (user: string, room: string) => {
+    const mainWindow = new BrowserWindow({
+        width: 800,
+        height: 600,
+        x: user === 'user1' ? 0 : 800, // Position windows side by side
+        y: 0,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            // Enable contextBridge for safe IPC
+            nodeIntegration: false,
+        },
+    });
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-const socket = io('ws://localhost:3000');
+    // Load the HTML file or URL
+    if (process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+        mainWindow.loadURL(process.env.MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    } else {
+        mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    }
 
-const createWindow = () => {
+    // Open DevTools (remove in production)
+    mainWindow.webContents.openDevTools();
 
-  //create the browser window
-  const mainWindow = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-          preload: path.join(__dirname, 'preload.js'),
-      },
-  }); 
+    // Handle messages
+    mainWindow.webContents.on('did-finish-load', () => {
+        // Pass user and room to renderer process
+        console.log('Sending init-data:', { user, room });
+        mainWindow.webContents.send('init-data', { user, room });
 
 
-  //load the index.html of the app
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL).then(r =>
-        console.log(r));
-  } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
-    );
-  }
+    });
 
-  //open the DevTools
-  mainWindow.webContents.openDevTools();
-
-  //Handle receiving messages
-  const handleMessages = (message: string) => {
-      console.log('Received message: ', message);
-
-      //send the message to iprenderer
-      mainWindow.webContents.send(message);
-  };
-  socket.on('message', handleMessages);
-  mainWindow.on('close', () => {
-    socket.off('message', handleMessages);
-  });
-
-  //Handle sending messages
-  ipcMain.on('socket-message', (_, message) => {
-    socket.emit('message', message);
-  });
+    return mainWindow;
 };
 
-app.on('ready', createWindow);
+// Create the windows
+const createWindows = () => {
+    mainWindow1 = createWindow('user1', 'Room1');
+    mainWindow2 = createWindow('user2', 'Room1');
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+    // Handle incoming messages from socket
+    const handleMessages = (message: any) => {
+        console.log('Received message:', message);
+
+        // Send the message to appropriate window
+        if (mainWindow1 && mainWindow1.webContents) {
+            mainWindow1.webContents.send('message', message);
+        }
+        if (mainWindow2 && mainWindow2.webContents) {
+            mainWindow2.webContents.send('message', message);
+        }
+    };
+
+    socket.on('message', handleMessages);
+
+    const cleanUp = () => {
+        socket.off('message', handleMessages);
+    };
+
+    mainWindow1.on('closed', cleanUp);
+    mainWindow2.on('closed', cleanUp);
+};
+
+// Handle app readiness and activation
+app.on('ready', createWindows);
+
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
 });
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-  
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindows();
+    }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-

@@ -1,17 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import {conversationContext, useConversation, useConversations, useSocket} from '../providers/SocketProvider';
 
-interface Conversation {
-    id: number;
-    name: string;
-}
+
 
 const Sidebar: React.FC = () => {
-    const { conversationRoom, setConversationRoom } = useConversation();
-    const { conversations, setConversations } = useConversations();
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    const [conversations, setConversations] = useState([]);
+    const {  setConversationRoom } = useConversation();
+    useEffect(() => {
+        const fetchConversations = async () => {
+            try {
+                const response = await fetch('http://localhost:3001/conversations');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch conversations');
+                }
+                const data = await response.json();
+                setConversations(data);
 
+            } catch (error) {
+                console.error('Error fetching conversations:', error);
+            }
+        };
+
+        fetchConversations();
+    }, []);
 
     return (
         <div className="fixed w-1/6 h-full top-0 left-0 bg-gray-700">
